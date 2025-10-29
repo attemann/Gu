@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Janus GPS Fix</title>
+    <title>Janus GPS Fix Visualization</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -236,10 +236,6 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>Janus GPS Fix</h1>
-        </div>
-        
         <div class="controls">
             <div class="status-info">
                 <span>
@@ -476,9 +472,12 @@
                 
                 // Add distance labels for 5m intervals
                 if (radius % 5 === 0 && pixelRadius > 20) {
-                    ctx.fillStyle = '#7f8c8d';
-                    ctx.font = '10px Arial';
+                    ctx.fillStyle = '#34495e';
+                    ctx.font = 'bold 16px Arial';
                     ctx.textAlign = 'center';
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 3;
+                    ctx.strokeText(`${radius}m`, centerX + pixelRadius * 0.707, centerY - pixelRadius * 0.707);
                     ctx.fillText(`${radius}m`, centerX + pixelRadius * 0.707, centerY - pixelRadius * 0.707);
                 }
             }
