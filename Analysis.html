@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS Precision Analysis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .status-bar {
+            background: #e8f4f8;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-online { background-color: #27ae60; }
+        .status-offline { background-color: #e74c3c; }
+        
+        .analysis-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        
+        .analysis-table th,
+        .analysis-table td {
+            border: 1px solid #ddd;
+            padding: 12px 8px;
+            text-align: center;
+        }
+        
+        .analysis-table th {
+            background-color: #34495e;
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+        
+        .analysis-table th.test-name {
+            background-color: #2c3e50;
+            text-align: left;
+            min-width: 100px;
+        }
+        
+        .analysis-table td.test-name {
+            background-color: #ecf0f1;
+            font-weight: bold;
+            text-align: left;
+        }
+        
+        .analysis-table td {
+            font-family: 'Courier New', monospace;
+        }
+        
+        .metric-group {
+            border-left: 3px solid #3498db;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .duration-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 10px 0;
+        }
+        
+        .controls input[type="range"] {
+            width: 300px;
+        }
+        
+        .config-test-btn {
+            white-space: nowrap;
+            font-size: 0.9em;
+            padding: 6px 12px;
+        }
+        
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            width: 300px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+
+        
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn.clear {
+            background-color: #e74c3c;
+        }
+        
+        .btn.clear:hover {
+            background-color: #c0392b;
+        }
+        
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+        
+        .script-controls {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .script-controls h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .duration-control {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .duration-control label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .duration-control input {
+            padding: 5px 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            width: 80px;
+            margin: 0 10px;
+        }
+        
+        .scripts-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .script-field {
+            background: white;
+            border-radius: 5px;
+            padding: 15px;
+            border: 1px solid #ddd;
+        }
+        
+        .script-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .script-field label {
+            font-weight: bold;
+            color: #34495e;
+        }
+        
+        .disable-control {
+            font-size: 0.9em;
+            font-weight: normal !important;
+            color: #666 !important;
+        }
+        
+        .disable-control input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        
+        .script-field.disabled {
+            opacity: 0.5;
+            background: #f8f8f8;
+        }
+        
+        .script-field.disabled textarea {
+            background: #f0f0f0;
+            color: #999;
+        }
+        
+        .script-readback {
+            margin-top: 10px;
+        }
+        
+        .script-readback textarea {
+            width: 100%;
+            height: 80px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            background-color: #f9f9f9;
+            color: #555;
+            resize: vertical;
+        }
+        
+        .table-description {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .table-description h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #34495e;
+            font-size: 1.2em;
+            text-align: center;
+        }
+        
+        .description-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 15px;
+        }
+        
+        .desc-item {
+            padding: 12px;
+            background-color: white;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        .desc-item strong {
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .script-field textarea {
+            width: 100%;
+            height: 140px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            resize: vertical;
+        }
+        
+        .script-field textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GPS Precision Analysis</h1>
+        
+        <div class="status-bar">
+            <div>
+                <span id="connection-status" class="status-indicator status-offline"></span>
+                <span id="connection-text">Connecting to ESP...</span>
+            </div>
+            <div>
+                <span>Fixes: <span id="fix-count">0</span></span>
+                <span>Last updated: <span id="last-update">Never</span></span>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="connectToESP()">Connect to ESP</button>
+            <span>Auto-detect ESP IP: <span id="esp-ip">Searching...</span></span>
+            <span id="test-status">Ready to start Test 1</span>
+        </div>
+
+        <div class="script-controls">
+            <h2>UM980 Command Scripts</h2>
+            <div class="controls">
+                <label for="test-duration">Test Duration: <span id="duration-value">60</span> seconds</label>
+                <div class="duration-controls">
+                    <input type="range" id="test-duration" min="10" max="600" value="60" step="10">
+                    <button class="btn" id="start-test-btn" onclick="startTest()">Start Test <span id="current-test-num">1</span></button>
+                    <button class="btn config-test-btn" onclick="startShortConfigTest()">Short config test</button>
+                </div>
+                <div class="slider-labels">
+                    <span>10s</span>
+                    <span>600s</span>
+                </div>
+            </div>
+            
+            <div class="scripts-container">
+                <div class="script-field">
+                    <div class="script-header">
+                        <label for="script1">Test 1:</label>
+                        <label class="disable-control">
+                            <input type="checkbox" id="disable1"> Disable
+                        </label>
+                    </div>
+                    <textarea id="script1" placeholder="Enter UM980 commands (one per line)...
+Example:
+FRESET
+CONFIG SIGNALGROUP 1
+MODE ROVER
+SAVECONFIG">unlog</textarea>
+                    <div class="script-readback">
+                        <textarea id="readback1" readonly placeholder="Configuration responses for Test 1..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="script-field">
+                    <div class="script-header">
+                        <label for="script2">Test 2:</label>
+                        <label class="disable-control">
+                            <input type="checkbox" id="disable2"> Disable
+                        </label>
+                    </div>
+                    <textarea id="script2" placeholder="Enter UM980 commands (one per line)...">unlog</textarea>
+                    <div class="script-readback">
+                        <textarea id="readback2" readonly placeholder="Configuration responses for Test 2..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="script-field">
+                    <div class="script-header">
+                        <label for="script3">Test 3:</label>
+                        <label class="disable-control">
+                            <input type="checkbox" id="disable3" checked> Disable
+                        </label>
+                    </div>
+                    <textarea id="script3" placeholder="Enter UM980 commands (one per line)...">unlog</textarea>
+                    <div class="script-readback">
+                        <textarea id="readback3" readonly placeholder="Configuration responses for Test 3..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="script-field">
+                    <div class="script-header">
+                        <label for="script4">Test 4:</label>
+                        <label class="disable-control">
+                            <input type="checkbox" id="disable4" checked> Disable
+                        </label>
+                    </div>
+                    <textarea id="script4" placeholder="Enter UM980 commands (one per line)...">unlog</textarea>
+                    <div class="script-readback">
+                        <textarea id="readback4" readonly placeholder="Configuration responses for Test 4..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="script-field">
+                    <div class="script-header">
+                        <label for="script5">Test 5:</label>
+                        <label class="disable-control">
+                            <input type="checkbox" id="disable5" checked> Disable
+                        </label>
+                    </div>
+                    <textarea id="script5" placeholder="Enter UM980 commands (one per line)...">unlog</textarea>
+                    <div class="script-readback">
+                        <textarea id="readback5" readonly placeholder="Configuration responses for Test 5..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="script-field">
+                    <div class="script-header">
+                        <label for="script6">Test 6:</label>
+                        <label class="disable-control">
+                            <input type="checkbox" id="disable6" checked> Disable
+                        </label>
+                    </div>
+                    <textarea id="script6" placeholder="Enter UM980 commands (one per line)...">unlog</textarea>
+                    <div class="script-readback">
+                        <textarea id="readback6" readonly placeholder="Configuration responses for Test 6..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <table class="analysis-table">
+            <thead>
+                <tr>
+                    <th class="test-name">Test</th>
+                    <th class="metric-group">Covariance Ellipse<br>Area (A95)<br><small>m²</small></th>
+                    <th class="metric-group">DRMS<br><small>m</small></th>
+                    <th class="metric-group">R95<br><small>m</small></th>
+                    <th class="metric-group">North MAD-σ<br><small>m</small></th>
+                    <th class="metric-group">East MAD-σ<br><small>m</small></th>
+                    <th class="metric-group">Rolling DRMS<br><small>m</small></th>
+                    <th class="metric-group">Allan Dev<br><small>m</small></th>
+                    <th class="metric-group">Outlier Rate<br><small>%</small></th>
+                    <th class="metric-group">Continuous Fix<br><small>s</small></th>
+                    <th class="metric-group">Fixes</th>
+                    <th class="metric-group">RTCM Messages<br><small>count</small></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="test-name">Test 1</td>
+                    <td id="test1-ellipse" class="loading">--</td>
+                    <td id="test1-drms" class="loading">--</td>
+                    <td id="test1-r95" class="loading">--</td>
+                    <td id="test1-north-mad" class="loading">--</td>
+                    <td id="test1-east-mad" class="loading">--</td>
+                    <td id="test1-rolling-drms" class="loading">--</td>
+                    <td id="test1-allan" class="loading">--</td>
+                    <td id="test1-outliers" class="loading">--</td>
+                    <td id="test1-continuous" class="loading">--</td>
+                    <td id="test1-fixes" class="loading">0</td>
+                    <td id="test1-rtcm" class="loading">--</td>
+                </tr>
+                <tr>
+                    <td class="test-name">Test 2</td>
+                    <td id="test2-ellipse" class="loading">--</td>
+                    <td id="test2-drms" class="loading">--</td>
+                    <td id="test2-r95" class="loading">--</td>
+                    <td id="test2-north-mad" class="loading">--</td>
+                    <td id="test2-east-mad" class="loading">--</td>
+                    <td id="test2-rolling-drms" class="loading">--</td>
+                    <td id="test2-allan" class="loading">--</td>
+                    <td id="test2-outliers" class="loading">--</td>
+                    <td id="test2-continuous" class="loading">--</td>
+                    <td id="test2-fixes" class="loading">0</td>
+                    <td id="test2-rtcm" class="loading">--</td>
+                </tr>
+                <tr>
+                    <td class="test-name">Test 3</td>
+                    <td id="test3-ellipse" class="loading">--</td>
+                    <td id="test3-drms" class="loading">--</td>
+                    <td id="test3-r95" class="loading">--</td>
+                    <td id="test3-north-mad" class="loading">--</td>
+                    <td id="test3-east-mad" class="loading">--</td>
+                    <td id="test3-rolling-drms" class="loading">--</td>
+                    <td id="test3-allan" class="loading">--</td>
+                    <td id="test3-outliers" class="loading">--</td>
+                    <td id="test3-continuous" class="loading">--</td>
+                    <td id="test3-fixes" class="loading">0</td>
+                    <td id="test3-rtcm" class="loading">--</td>
+                </tr>
+                <tr>
+                    <td class="test-name">Test 4</td>
+                    <td id="test4-ellipse" class="loading">--</td>
+                    <td id="test4-drms" class="loading">--</td>
+                    <td id="test4-r95" class="loading">--</td>
+                    <td id="test4-north-mad" class="loading">--</td>
+                    <td id="test4-east-mad" class="loading">--</td>
+                    <td id="test4-rolling-drms" class="loading">--</td>
+                    <td id="test4-allan" class="loading">--</td>
+                    <td id="test4-outliers" class="loading">--</td>
+                    <td id="test4-continuous" class="loading">--</td>
+                    <td id="test4-fixes" class="loading">0</td>
+                    <td id="test4-rtcm" class="loading">--</td>
+                </tr>
+                <tr>
+                    <td class="test-name">Test 5</td>
+                    <td id="test5-ellipse" class="loading">--</td>
+                    <td id="test5-drms" class="loading">--</td>
+                    <td id="test5-r95" class="loading">--</td>
+                    <td id="test5-north-mad" class="loading">--</td>
+                    <td id="test5-east-mad" class="loading">--</td>
+                    <td id="test5-rolling-drms" class="loading">--</td>
+                    <td id="test5-allan" class="loading">--</td>
+                    <td id="test5-outliers" class="loading">--</td>
+                    <td id="test5-continuous" class="loading">--</td>
+                    <td id="test5-fixes" class="loading">0</td>
+                    <td id="test5-rtcm" class="loading">--</td>
+                </tr>
+                <tr>
+                    <td class="test-name">Test 6</td>
+                    <td id="test6-ellipse" class="loading">--</td>
+                    <td id="test6-drms" class="loading">--</td>
+                    <td id="test6-r95" class="loading">--</td>
+                    <td id="test6-north-mad" class="loading">--</td>
+                    <td id="test6-east-mad" class="loading">--</td>
+                    <td id="test6-rolling-drms" class="loading">--</td>
+                    <td id="test6-allan" class="loading">--</td>
+                    <td id="test6-outliers" class="loading">--</td>
+                    <td id="test6-continuous" class="loading">--</td>
+                    <td id="test6-fixes" class="loading">0</td>
+                    <td id="test6-rtcm" class="loading">--</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="table-description">
+            <h3>Column Descriptions</h3>
+            <div class="description-grid">
+                <div class="desc-item">
+                    <strong>Covariance Ellipse Area (A95):</strong> Area of 95% confidence ellipse in m², indicating positioning uncertainty.
+                </div>
+                <div class="desc-item">
+                    <strong>DRMS:</strong> Distance Root Mean Square - circular error probable at 63% confidence level.
+                </div>
+                <div class="desc-item">
+                    <strong>R95:</strong> Radial error at 95% confidence level - radius containing 95% of position fixes.
+                </div>
+                <div class="desc-item">
+                    <strong>North/East MAD-σ:</strong> Median Absolute Deviation based standard deviation for North and East components.
+                </div>
+                <div class="desc-item">
+                    <strong>Rolling DRMS:</strong> Time-windowed DRMS showing positioning stability over the test duration.
+                </div>
+                <div class="desc-item">
+                    <strong>Allan Deviation:</strong> Measure of positioning stability and noise characteristics over time.
+                </div>
+                <div class="desc-item">
+                    <strong>Outlier Rate:</strong> Percentage of fixes classified as outliers (beyond 3σ threshold).
+                </div>
+                <div class="desc-item">
+                    <strong>Continuous Fix:</strong> Duration of longest continuous fix period without interruption.
+                </div>
+                <div class="desc-item">
+                    <strong>Fixes:</strong> Total number of position fixes received during the test period.
+                </div>
+                <div class="desc-item">
+                    <strong>RTCM Messages:</strong> Count of each RTCM correction message type received (format: type:count).
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // GPS Analysis Variables
+        let websocket = null;
+        let ESP_IP = '192.168.4.1';
+        let currentTest = 1;
+        let testRunning = false;
+        let testTimer = null;
+        let lastSentScript = 1;
+        let testData = {
+            1: { fixes: [], startTime: null, lastFixTime: null, rtcmMessages: {} },
+            2: { fixes: [], startTime: null, lastFixTime: null, rtcmMessages: {} },
+            3: { fixes: [], startTime: null, lastFixTime: null, rtcmMessages: {} },
+            4: { fixes: [], startTime: null, lastFixTime: null, rtcmMessages: {} },
+            5: { fixes: [], startTime: null, lastFixTime: null, rtcmMessages: {} },
+            6: { fixes: [], startTime: null, lastFixTime: null, rtcmMessages: {} }
+        };
+
+        // Initialize on page load
+        window.onload = function() {
+            detectESP();
+            initWebSocket();
+        };
+
+        // Auto-detect ESP IP
+        function detectESP() {
+            const hostname = window.location.hostname;
+            document.getElementById('esp-ip').textContent = hostname;
+            
+            if (hostname !== '127.0.0.1' && hostname !== 'localhost') {
+                ESP_IP = hostname;
+            }
+        }
+
+        // WebSocket connection
+        function initWebSocket() {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.close();
+            }
+            
+            const wsUrl = 'ws://' + ESP_IP + '/json';
+            console.log('Connecting to:', wsUrl);
+            
+            try {
+                websocket = new WebSocket(wsUrl);
+                
+                websocket.onopen = function(event) {
+                    console.log('WebSocket connected');
+                    updateConnectionStatus(true, 'Connected to ' + ESP_IP);
+                };
+                
+                websocket.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        
+                        // Handle GPS data
+                        if (data.lat && data.lon) {
+                            processGPSData(data);
+                        }
+                        
+                        // Handle RTCM messages
+                        if (data.rtcm_type && testRunning) {
+                            processRTCMMessage(data);
+                        }
+                        
+                        // Handle UM980 configuration responses
+                        if (data.type === 'um980_response' || data.type === 'config_response') {
+                            const timestamp = new Date().toLocaleTimeString();
+                            
+                            // Determine which script this response belongs to
+                            let scriptNumber = data.script_id || lastSentScript;
+                            const individualReadbackField = document.getElementById(`readback${scriptNumber}`);
+                            
+                            let responseText = '';
+                            if (data.response) {
+                                responseText = `[${timestamp}] Response: ${data.response}\n`;
+                            } else if (data.message) {
+                                responseText = `[${timestamp}] ${data.message}\n`;
+                            }
+                            
+                            // Update individual script readback
+                            if (individualReadbackField) {
+                                individualReadbackField.value += responseText;
+                                individualReadbackField.scrollTop = individualReadbackField.scrollHeight;
+                            }
+                        }
+                        
+                    } catch (error) {
+                        console.error('Error parsing message data:', error);
+                        
+                        // If it's not JSON, it might be a raw UM980 response
+                        if (typeof event.data === 'string' && (event.data.includes('$') || event.data.includes('#'))) {
+                            const individualReadbackField = document.getElementById(`readback${lastSentScript}`);
+                            const timestamp = new Date().toLocaleTimeString();
+                            const rawResponse = `[${timestamp}] Raw response: ${event.data}\n`;
+                            
+                            // Update individual script readback
+                            if (individualReadbackField) {
+                                individualReadbackField.value += rawResponse;
+                                individualReadbackField.scrollTop = individualReadbackField.scrollHeight;
+                            }
+                        }
+                    }
+                };
+                
+                websocket.onclose = function(event) {
+                    console.log('WebSocket closed');
+                    updateConnectionStatus(false, 'Disconnected');
+                    setTimeout(initWebSocket, 5000); // Reconnect after 5 seconds
+                };
+                
+                websocket.onerror = function(error) {
+                    console.error('WebSocket error:', error);
+                    updateConnectionStatus(false, 'Connection error');
+                };
+                
+            } catch (error) {
+                console.error('Failed to create WebSocket:', error);
+                updateConnectionStatus(false, 'Failed to connect');
+            }
+        }
+
+        function updateConnectionStatus(connected, message) {
+            const statusIndicator = document.getElementById('connection-status');
+            const statusText = document.getElementById('connection-text');
+            
+            if (connected) {
+                statusIndicator.className = 'status-indicator status-online';
+            } else {
+                statusIndicator.className = 'status-indicator status-offline';
+            }
+            statusText.textContent = message;
+        }
+
+        function processRTCMMessage(data) {
+            if (!testRunning || !data.rtcm_type) return;
+            
+            const rtcmType = data.rtcm_type;
+            
+            // Initialize RTCM message counter for this type if not exists
+            if (!testData[currentTest].rtcmMessages[rtcmType]) {
+                testData[currentTest].rtcmMessages[rtcmType] = 0;
+            }
+            
+            // Increment counter
+            testData[currentTest].rtcmMessages[rtcmType]++;
+            
+            // Update display
+            updateRTCMDisplay(currentTest);
+        }
+        
+        function updateRTCMDisplay(testNumber) {
+            const rtcmElement = document.getElementById(`test${testNumber}-rtcm`);
+            if (!rtcmElement) return;
+            
+            const rtcmMessages = testData[testNumber].rtcmMessages;
+            const rtcmTypes = Object.keys(rtcmMessages);
+            
+            if (rtcmTypes.length === 0) {
+                rtcmElement.textContent = '--';
+                return;
+            }
+            
+            // Create a summary string showing message types and counts
+            const summary = rtcmTypes
+                .sort()
+                .map(type => `${type}:${rtcmMessages[type]}`)
+                .join(', ');
+            
+            rtcmElement.textContent = summary;
+            rtcmElement.title = `RTCM Message Counts: ${summary}`;
+        }
+        
+        function processGPSData(data) {
+            // Only process data if test is running
+            if (!testRunning) return;
+            
+            const fix = {
+                lat: data.lat,
+                lon: data.lon,
+                ele: data.ele || 0,
+                type: data.type || 0,
+                timestamp: Date.now(),
+                hdop: data.hdop || 0,
+                siv: data.siv || 0
+            };
+
+            // Add to current test
+            if (!testData[currentTest].startTime) {
+                testData[currentTest].startTime = fix.timestamp;
+            }
+            
+            testData[currentTest].fixes.push(fix);
+            testData[currentTest].lastFixTime = fix.timestamp;
+
+            // Update display
+            updateAnalysis();
+            document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+        }
+
+        function updateAnalysis() {
+            for (let testNum = 1; testNum <= 6; testNum++) {
+                const fixes = testData[testNum].fixes;
+                if (fixes.length === 0) continue;
+
+                // Update fix count
+                document.getElementById(`test${testNum}-fixes`).textContent = fixes.length;
+
+                if (fixes.length < 10) continue; // Need minimum fixes for analysis
+
+                // Calculate all metrics
+                const metrics = calculateMetrics(fixes);
+                
+                // Update table
+                document.getElementById(`test${testNum}-ellipse`).textContent = metrics.ellipseArea.toFixed(4);
+                document.getElementById(`test${testNum}-drms`).textContent = metrics.drms.toFixed(3);
+                document.getElementById(`test${testNum}-r95`).textContent = metrics.r95.toFixed(3);
+                document.getElementById(`test${testNum}-north-mad`).textContent = metrics.northMAD.toFixed(3);
+                document.getElementById(`test${testNum}-east-mad`).textContent = metrics.eastMAD.toFixed(3);
+                document.getElementById(`test${testNum}-rolling-drms`).textContent = metrics.rollingDRMS.toFixed(3);
+                document.getElementById(`test${testNum}-allan`).textContent = metrics.allanDev.toFixed(3);
+                document.getElementById(`test${testNum}-outliers`).textContent = metrics.outlierRate.toFixed(1);
+                document.getElementById(`test${testNum}-continuous`).textContent = metrics.continuousTime.toFixed(0);
+            }
+
+            // Update total fix count
+            const totalFixes = Object.values(testData).reduce((sum, test) => sum + test.fixes.length, 0);
+            document.getElementById('fix-count').textContent = totalFixes;
+        }
+
+        function calculateMetrics(fixes) {
+            if (fixes.length < 2) return getEmptyMetrics();
+
+            // Convert to local coordinates (meters from first fix)
+            const refFix = fixes[0];
+            const coords = fixes.map(fix => latLonToMeters(fix.lat, fix.lon, refFix.lat, refFix.lon));
+            
+            // Extract North/East arrays
+            const north = coords.map(c => c.north);
+            const east = coords.map(c => c.east);
+
+            // Calculate basic statistics
+            const northMean = mean(north);
+            const eastMean = mean(east);
+            const northVar = variance(north, northMean);
+            const eastVar = variance(east, eastMean);
+            const covariance = calculateCovariance(north, east, northMean, eastMean);
+
+            // Covariance ellipse area (A95)
+            const ellipseArea = calculateEllipseArea95(northVar, eastVar, covariance);
+
+            // DRMS
+            const drms = Math.sqrt(northVar + eastVar);
+
+            // R95 (95th percentile)
+            const distances = coords.map(c => Math.sqrt(c.north * c.north + c.east * c.east));
+            const r95 = percentile(distances, 95);
+
+            // MAD-based sigma
+            const northMAD = medianAbsoluteDeviation(north) * 1.4826; // Scale factor for normal distribution
+            const eastMAD = medianAbsoluteDeviation(east) * 1.4826;
+
+            // Rolling DRMS (last 60 seconds)
+            const rollingDRMS = calculateRollingDRMS(fixes, 60);
+
+            // Allan deviation (simplified)
+            const allanDev = calculateAllanDeviation(coords);
+
+            // Outlier rate
+            const outlierRate = calculateOutlierRate(distances);
+
+            // Continuous fix time
+            const continuousTime = calculateContinuousTime(fixes);
+
+            return {
+                ellipseArea,
+                drms,
+                r95,
+                northMAD,
+                eastMAD,
+                rollingDRMS,
+                allanDev,
+                outlierRate,
+                continuousTime
+            };
+        }
+
+        function latLonToMeters(lat, lon, refLat, refLon) {
+            const R = 6378137; // Earth radius in meters
+            const dLat = (lat - refLat) * Math.PI / 180;
+            const dLon = (lon - refLon) * Math.PI / 180;
+            const refLatRad = refLat * Math.PI / 180;
+            
+            const north = dLat * R;
+            const east = dLon * R * Math.cos(refLatRad);
+            
+            return { north, east };
+        }
+
+        function mean(arr) {
+            return arr.reduce((sum, val) => sum + val, 0) / arr.length;
+        }
+
+        function variance(arr, mean) {
+            return arr.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (arr.length - 1);
+        }
+
+        function calculateCovariance(x, y, xMean, yMean) {
+            let sum = 0;
+            for (let i = 0; i < x.length; i++) {
+                sum += (x[i] - xMean) * (y[i] - yMean);
+            }
+            return sum / (x.length - 1);
+        }
+
+        function calculateEllipseArea95(varX, varY, cov) {
+            // 95% confidence ellipse area
+            const chi2_95 = 5.991; // Chi-square value for 95% confidence, 2 DOF
+            const det = varX * varY - cov * cov;
+            return Math.PI * Math.sqrt(det * chi2_95);
+        }
+
+        function percentile(arr, p) {
+            const sorted = [...arr].sort((a, b) => a - b);
+            const index = (p / 100) * (sorted.length - 1);
+            const lower = Math.floor(index);
+            const upper = Math.ceil(index);
+            const weight = index - lower;
+            return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+        }
+
+        function medianAbsoluteDeviation(arr) {
+            const median = percentile(arr, 50);
+            const deviations = arr.map(val => Math.abs(val - median));
+            return percentile(deviations, 50);
+        }
+
+        function calculateRollingDRMS(fixes, windowSeconds) {
+            if (fixes.length < 2) return 0;
+            
+            const now = fixes[fixes.length - 1].timestamp;
+            const windowMs = windowSeconds * 1000;
+            const windowFixes = fixes.filter(fix => (now - fix.timestamp) <= windowMs);
+            
+            if (windowFixes.length < 2) return 0;
+            
+            const coords = windowFixes.map(fix => latLonToMeters(fix.lat, fix.lon, windowFixes[0].lat, windowFixes[0].lon));
+            const north = coords.map(c => c.north);
+            const east = coords.map(c => c.east);
+            
+            return Math.sqrt(variance(north, mean(north)) + variance(east, mean(east)));
+        }
+
+        function calculateAllanDeviation(coords) {
+            // Simplified Allan deviation calculation
+            if (coords.length < 10) return 0;
+            
+            const distances = coords.map(c => Math.sqrt(c.north * c.north + c.east * c.east));
+            let sum = 0;
+            for (let i = 1; i < distances.length; i++) {
+                sum += Math.pow(distances[i] - distances[i-1], 2);
+            }
+            return Math.sqrt(sum / (2 * (distances.length - 1)));
+        }
+
+        function calculateOutlierRate(distances) {
+            const q75 = percentile(distances, 75);
+            const q25 = percentile(distances, 25);
+            const iqr = q75 - q25;
+            const threshold = q75 + 1.5 * iqr;
+            const outliers = distances.filter(d => d > threshold).length;
+            return (outliers / distances.length) * 100;
+        }
+
+        function calculateContinuousTime(fixes) {
+            if (fixes.length < 2) return 0;
+            return (fixes[fixes.length - 1].timestamp - fixes[0].timestamp) / 1000;
+        }
+
+        function getEmptyMetrics() {
+            return {
+                ellipseArea: 0,
+                drms: 0,
+                r95: 0,
+                northMAD: 0,
+                eastMAD: 0,
+                rollingDRMS: 0,
+                allanDev: 0,
+                outlierRate: 0,
+                continuousTime: 0
+            };
+        }
+
+        // Control functions
+        function startTest() {
+            if (testRunning) {
+                stopTest();
+                return;
+            }
+            
+            // Check if current test is disabled
+            if (document.getElementById(`disable${currentTest}`).checked) {
+                alert(`Test ${currentTest} is disabled. Please enable it or select a different test.`);
+                return;
+            }
+            
+            // Clear current test data
+            testData[currentTest] = { fixes: [], startTime: null, lastFixTime: null, rtcmMessages: {} };
+            
+            // Start the test
+            testRunning = true;
+            const duration = parseInt(document.getElementById('test-duration').value) * 1000;
+            
+            // Update UI
+            updateTestUI();
+            
+            // Schedule automatic test stop
+            testTimer = setTimeout(() => {
+                stopTest();
+                
+                if (configTestRunning) {
+                    // Handle config test completion
+                    handleConfigTestCompletion();
+                } else {
+                    // Normal test completion
+                    alert(`Test ${currentTest} completed after ${duration/1000} seconds`);
+                    
+                    // Auto-advance to next enabled test
+                    let nextTest = currentTest + 1;
+                    while (nextTest <= 6 && document.getElementById(`disable${nextTest}`).checked) {
+                        nextTest++;
+                    }
+                    
+                    if (nextTest <= 6) {
+                        currentTest = nextTest;
+                        updateCurrentTestDisplay();
+                        document.getElementById('test-status').textContent = `Ready to start Test ${currentTest}`;
+                    } else {
+                        document.getElementById('test-status').textContent = 'All tests completed';
+                    }
+                }
+            }, duration);
+            
+            console.log(`Started Test ${currentTest} - Duration: ${duration/1000}s`);
+        }
+        
+        function stopTest() {
+            testRunning = false;
+            if (testTimer) {
+                clearTimeout(testTimer);
+                testTimer = null;
+            }
+            
+            // If config test was running and manually stopped, reset it
+            if (configTestRunning) {
+                configTestRunning = false;
+                configTestQueue = [];
+                
+                // Restore original duration
+                document.getElementById('test-duration').value = originalDuration;
+                updateDurationDisplay();
+                
+                // Reset button
+                const button = document.querySelector('.config-test-btn');
+                button.textContent = 'Short config test';
+                button.disabled = false;
+            }
+            
+            updateTestUI();
+        }
+        
+        function resetAll() {
+            // Stop current test
+            stopTest();
+            
+            // Reset all test data
+            for (let i = 1; i <= 6; i++) {
+                testData[i] = { fixes: [], startTime: null, lastFixTime: null, rtcmMessages: {} };
+            }
+            
+            // Reset to first enabled test
+            currentTest = 1;
+            while (currentTest <= 6 && document.getElementById(`disable${currentTest}`).checked) {
+                currentTest++;
+            }
+            if (currentTest > 6) currentTest = 1; // Fallback if all tests are disabled
+            
+            // Clear table display
+            for (let testNum = 1; testNum <= 6; testNum++) {
+                document.getElementById(`test${testNum}-ellipse`).textContent = '--';
+                document.getElementById(`test${testNum}-drms`).textContent = '--';
+                document.getElementById(`test${testNum}-r95`).textContent = '--';
+                document.getElementById(`test${testNum}-north-mad`).textContent = '--';
+                document.getElementById(`test${testNum}-east-mad`).textContent = '--';
+                document.getElementById(`test${testNum}-rolling-drms`).textContent = '--';
+                document.getElementById(`test${testNum}-allan`).textContent = '--';
+                document.getElementById(`test${testNum}-outliers`).textContent = '--';
+                document.getElementById(`test${testNum}-continuous`).textContent = '--';
+                document.getElementById(`test${testNum}-fixes`).textContent = '0';
+                document.getElementById(`test${testNum}-rtcm`).textContent = '--';
+            }
+            
+            // Reset UI
+            updateCurrentTestDisplay();
+            document.getElementById('test-status').textContent = 'Ready to start Test 1';
+            document.getElementById('fix-count').textContent = '0';
+            
+            // Clear individual script readbacks
+            for (let i = 1; i <= 6; i++) {
+                const readbackField = document.getElementById(`readback${i}`);
+                if (readbackField) {
+                    readbackField.value = '';
+                }
+            }
+            
+            alert('All tests reset. Ready to start Test 1.');
+        }
+        
+        function updateTestUI() {
+            const btn = document.getElementById('start-test-btn');
+            const status = document.getElementById('test-status');
+            
+            if (testRunning) {
+                btn.textContent = `Stop Test ${currentTest}`;
+                btn.className = 'btn clear';
+                status.textContent = `Test ${currentTest} running...`;
+            } else {
+                btn.innerHTML = `Start Test <span id="current-test-num">${currentTest}</span>`;
+                btn.className = 'btn';
+                if (!status.textContent.includes('completed') && !status.textContent.includes('Ready')) {
+                    status.textContent = `Test ${currentTest} stopped`;
+                }
+            }
+        }
+        
+        function updateCurrentTestDisplay() {
+            const testNumSpan = document.getElementById('current-test-num');
+            if (testNumSpan) {
+                testNumSpan.textContent = currentTest;
+            }
+        }
+        
+        function sendScript(scriptNumber) {
+            const scriptContent = document.getElementById(`script${scriptNumber}`).value.trim();
+            if (!scriptContent) {
+                alert(`Script ${scriptNumber} is empty`);
+                return;
+            }
+            
+            if (!websocket || websocket.readyState !== WebSocket.OPEN) {
+                alert('WebSocket not connected. Cannot send script.');
+                return;
+            }
+            
+            // Split script into individual commands
+            const commands = scriptContent.split('\n')
+                .map(cmd => cmd.trim())
+                .filter(cmd => cmd.length > 0 && !cmd.startsWith('#'));
+            
+            if (commands.length === 0) {
+                alert('No valid commands found in script');
+                return;
+            }
+            
+            // Send commands to ESP/UM980
+            const scriptData = {
+                type: 'um980_script',
+                script_id: scriptNumber,
+                commands: commands,
+                timestamp: Date.now()
+            };
+            
+            try {
+                lastSentScript = scriptNumber; // Track which script was sent last
+                websocket.send(JSON.stringify(scriptData));
+                console.log(`Script ${scriptNumber} sent:`, commands);
+                
+                // Update individual script readback field with sent commands
+                const readbackField = document.getElementById(`readback${scriptNumber}`);
+                const timestamp = new Date().toLocaleTimeString();
+                const commandText = commands.map((cmd, index) => `${index + 1}. ${cmd}`).join('\n');
+                
+                // Update individual script readback
+                if (readbackField) {
+                    readbackField.value += `[${timestamp}] Sent:\n${commandText}\n\nWaiting for responses...\n\n`;
+                    readbackField.scrollTop = readbackField.scrollHeight;
+                }
+                
+                alert(`Script ${scriptNumber} sent successfully (${commands.length} commands)`);
+                
+                // Log commands for debugging
+                commands.forEach((cmd, index) => {
+                    console.log(`  ${index + 1}: ${cmd}`);
+                });
+                
+            } catch (error) {
+                console.error('Error sending script:', error);
+                alert(`Failed to send Script ${scriptNumber}: ${error.message}`);
+            }
+        }
+
+        function connectToESP() {
+            initWebSocket();
+        }
+        
+
+        
+        let configTestRunning = false;
+        let configTestQueue = [];
+        let originalDuration = 60;
+        
+        function startShortConfigTest() {
+            if (configTestRunning) {
+                alert('Short config test is already running');
+                return;
+            }
+            
+            if (testRunning) {
+                alert('Please stop the current test before starting config test');
+                return;
+            }
+            
+            // Find all enabled tests
+            const enabledTests = [];
+            for (let i = 1; i <= 6; i++) {
+                if (!document.getElementById(`disable${i}`).checked) {
+                    enabledTests.push(i);
+                }
+            }
+            
+            if (enabledTests.length === 0) {
+                alert('No tests are enabled. Please enable at least one test.');
+                return;
+            }
+            
+            // Save original duration and set to 5 seconds
+            originalDuration = document.getElementById('test-duration').value;
+            document.getElementById('test-duration').value = 10; // Minimum slider value is 10
+            updateDurationDisplay();
+            
+            // Setup test queue
+            configTestRunning = true;
+            configTestQueue = [...enabledTests];
+            
+            // Update button state
+            const button = document.querySelector('.config-test-btn');
+            button.textContent = 'Running config test...';
+            button.disabled = true;
+            
+            // Start first test
+            currentTest = configTestQueue[0];
+            updateCurrentTestDisplay();
+            document.getElementById('test-status').textContent = `Config test: Starting Test ${currentTest} (${configTestQueue.length} tests remaining)`;
+            
+            // Auto-start the test
+            setTimeout(() => {
+                startTest();
+            }, 500);
+        }
+        
+        function handleConfigTestCompletion() {
+            if (!configTestRunning) return;
+            
+            // Remove completed test from queue
+            configTestQueue.shift();
+            
+            if (configTestQueue.length > 0) {
+                // Move to next test
+                currentTest = configTestQueue[0];
+                updateCurrentTestDisplay();
+                document.getElementById('test-status').textContent = `Config test: Starting Test ${currentTest} (${configTestQueue.length} tests remaining)`;
+                
+                // Start next test after brief delay
+                setTimeout(() => {
+                    startTest();
+                }, 1000);
+            } else {
+                // Config test completed
+                configTestRunning = false;
+                
+                // Restore original duration
+                document.getElementById('test-duration').value = originalDuration;
+                updateDurationDisplay();
+                
+                // Reset button
+                const button = document.querySelector('.config-test-btn');
+                button.textContent = 'Short config test';
+                button.disabled = false;
+                
+                // Update status
+                document.getElementById('test-status').textContent = 'Short config test completed';
+                
+                alert('Short configuration test completed! All enabled tests have been verified.');
+            }
+        }
+        
+        // Handle disable checkbox changes
+        function updateDisabledState() {
+            for (let i = 1; i <= 6; i++) {
+                const checkbox = document.getElementById(`disable${i}`);
+                const scriptField = checkbox.closest('.script-field');
+                const textarea = document.getElementById(`script${i}`);
+                const readbackTextarea = document.getElementById(`readback${i}`);
+                
+                if (checkbox.checked) {
+                    scriptField.classList.add('disabled');
+                    textarea.disabled = true;
+                    if (readbackTextarea) readbackTextarea.style.opacity = '0.5';
+                } else {
+                    scriptField.classList.remove('disabled');
+                    textarea.disabled = false;
+                    if (readbackTextarea) readbackTextarea.style.opacity = '1';
+                }
+            }
+        }
+        
+        // Update duration display
+        function updateDurationDisplay() {
+            const slider = document.getElementById('test-duration');
+            const display = document.getElementById('duration-value');
+            display.textContent = slider.value;
+        }
+        
+        // Initialize disable states on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners to all disable checkboxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById(`disable${i}`).addEventListener('change', updateDisabledState);
+            }
+            
+            // Add event listener to duration slider
+            document.getElementById('test-duration').addEventListener('input', updateDurationDisplay);
+            
+            // Set initial states
+            updateDisabledState();
+            updateDurationDisplay();
+        });
+    </script>
+</body>
+</html>
